@@ -8,7 +8,7 @@ AppScreen2::AppScreen2()
     : m_scrollToBottom(false) {
     memset(m_inputBuffer, 0, sizeof(m_inputBuffer));
     AddLog("=================================================");
-    AddLog("  CSOPESY OS Interactive Terminal v2.0");
+    AddLog("  CSOPESY OS Interactive Terminal v1.0");
     AddLog("  Type 'help' for a list of available commands.");
     AddLog("=================================================");
 }
@@ -40,7 +40,7 @@ void AppScreen2::ExecuteCommand(const char* cmdStr) {
         AddLog("  clear    - Clear terminal buffer");
         AddLog("  exit     - Close terminal window");
     } else if (cmd == "ver") {
-        AddLog("CSOPESY OS Kernel v2.0.26 [x86_64-mingw]");
+        AddLog("CSOPESY OS Kernel v1.0.26 [x86_64-mingw]");
         AddLog("Compositor Engine: Dear ImGui 1.90 + GLFW 3.4");
     } else if (cmd == "ps") {
         AddLog("PID   NAME                     CPU%%   MEM");
@@ -76,6 +76,7 @@ void AppScreen2::UpdateAndRender(bool* pOpen) {
     if (!pOpen || !*pOpen) return;
 
     ImGui::SetNextWindowSize(ImVec2(550, 360), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(130.0f, 150.0f), ImGuiCond_FirstUseEver);
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.02f, 0.04f, 0.07f, 0.95f));
 
     if (ImGui::Begin("CSOPESY System Terminal", pOpen, ImGuiWindowFlags_NoCollapse)) {

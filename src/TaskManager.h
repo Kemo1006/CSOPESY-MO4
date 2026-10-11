@@ -25,6 +25,8 @@ private:
     std::vector<ProcessInfo> m_processes;
     int m_selectedProcessIndex;
     float m_updateTimer;
+    float m_baseMemMB;
+    float m_usedMemMB;
     
     // Dynamic performance plot history
     std::vector<float> m_cpuHistory;

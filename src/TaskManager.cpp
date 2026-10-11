@@ -1,15 +1,18 @@
 #include "TaskManager.h"
+#include "Config.h"
+#include <cfloat>
+#include <cstdio>
 #include <cmath>
 #include <cstdlib>
 #include <algorithm>
 
 TaskManager::TaskManager() 
-    : m_selectedProcessIndex(-1), m_updateTimer(0.0f) {
+    : m_selectedProcessIndex(-1), m_updateTimer(0.0f), m_baseMemMB(Config::Get().baseMemUsedMB), m_usedMemMB(Config::Get().baseMemUsedMB) {
     InitializeProcesses();
 
     // Initialize performance histories (50 data points)
     m_cpuHistory.resize(50, 15.0f);
-    m_ramHistory.resize(50, 42.0f);
+    m_ramHistory.resize(50, std::min(100.0f, Config::Get().baseMemUsedMB / (Config::Get().totalRamGB * 1024.0f) * 100.0f));
 }
 
 TaskManager::~TaskManager() {
@@ -17,21 +20,31 @@ TaskManager::~TaskManager() {
 
 void TaskManager::InitializeProcesses() {
     m_processes.clear();
+    m_selectedProcessIndex = -1;
+
+    // Processes come from config.txt; fall back to a built-in list if none are given.
+    const Config& cfg = Config::Get();
+    for (size_t i = 0; i < cfg.processes.size(); ++i) {
+        const ProcessSeed& p = cfg.processes[i];
+        m_processes.push_back({ p.pid, p.name, p.cpuUsage, p.memoryUsageMB, p.status, p.user });
+    }
+    if (!m_processes.empty()) return;
+
     m_processes.push_back({ 1004, "csopesy_compositor.exe", 4.2f, 128.5f, "Running", "SYSTEM" });
     m_processes.push_back({ 1088, "system_idle_process.exe", 82.1f, 4.0f, "Running", "SYSTEM" });
-    m_processes.push_back({ 2140, "dwm_compositor.exe", 2.8f, 96.2f, "Running", "SYSTEM" });
+    m_processes.push_back({ 2140, "window_manager.exe", 2.8f, 96.2f, "Running", "SYSTEM" });
     m_processes.push_back({ 3412, "csopesy_terminal.exe", 0.5f, 32.1f, "Running", "Student" });
     m_processes.push_back({ 4096, "file_explorer.exe", 1.1f, 64.8f, "Running", "Student" });
     m_processes.push_back({ 5120, "imgui_renderer.exe", 3.4f, 112.0f, "Running", "Student" });
-    m_processes.push_back({ 6234, "antigravity_agent.exe", 1.8f, 184.2f, "Running", "Student" });
     m_processes.push_back({ 7800, "audio_service.exe", 0.2f, 18.4f, "Running", "LOCAL SERVICE" });
 }
 
 void TaskManager::UpdateTelemetry(float deltaTime) {
     m_updateTimer += deltaTime;
+    const Config& cfg = Config::Get();
 
     // Periodically fluctuate dummy CPU and Memory values for real-time feel
-    if (m_updateTimer >= 0.5f) {
+    if (m_updateTimer >= cfg.telemetryInterval) {
         m_updateTimer = 0.0f;
         float totalCpu = 0.0f;
         float totalRam = 0.0f;
@@ -45,16 +58,21 @@ void TaskManager::UpdateTelemetry(float deltaTime) {
                 m_processes[i].memoryUsageMB = std::max(5.0f, m_processes[i].memoryUsageMB + ramDelta);
 
                 totalCpu += m_processes[i].cpuUsage;
-                totalRam += m_processes[i].memoryUsageMB;
             }
+            totalRam += m_processes[i].memoryUsageMB;
         }
+
+        // System memory drifts around its configured base so the graph visibly moves.
+        float drift = ((rand() % 100) - 50) / 50.0f * 80.0f;
+        m_baseMemMB = std::max(cfg.baseMemUsedMB * 0.7f, std::min(cfg.baseMemUsedMB * 1.3f, m_baseMemMB + drift));
+        m_usedMemMB = m_baseMemMB + totalRam;
 
         // Rotate performance history buffers
         m_cpuHistory.erase(m_cpuHistory.begin());
         m_cpuHistory.push_back(std::min(100.0f, totalCpu));
 
         m_ramHistory.erase(m_ramHistory.begin());
-        m_ramHistory.push_back(std::min(100.0f, (totalRam / 16384.0f) * 100.0f + 25.0f));
+        m_ramHistory.push_back(std::min(100.0f, m_usedMemMB / (cfg.totalRamGB * 1024.0f) * 100.0f));
     }
 }
 
@@ -70,12 +88,12 @@ void TaskManager::RenderProcessesTab() {
                                  ImGuiTableFlags_Sortable;
 
     if (ImGui::BeginTable("ProcessTable", 6, tableFlags, ImVec2(0, -40))) {
-        ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed, 60.0f);
-        ImGui::TableSetupColumn("Process Name", ImGuiTableColumnFlags_WidthStretch);
-        ImGui::TableSetupColumn("CPU (%)", ImGuiTableColumnFlags_WidthFixed, 80.0f);
-        ImGui::TableSetupColumn("Memory (MB)", ImGuiTableColumnFlags_WidthFixed, 100.0f);
-        ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 90.0f);
-        ImGui::TableSetupColumn("User", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+        ImGui::TableSetupColumn("PID", ImGuiTableColumnFlags_WidthFixed, 50.0f);
+        ImGui::TableSetupColumn("Process Name", ImGuiTableColumnFlags_WidthFixed, 190.0f);
+        ImGui::TableSetupColumn("CPU (%)", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+        ImGui::TableSetupColumn("Memory (MB)", ImGuiTableColumnFlags_WidthFixed, 90.0f);
+        ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthFixed, 70.0f);
+        ImGui::TableSetupColumn("User", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
         for (int i = 0; i < (int)m_processes.size(); ++i) {
@@ -142,11 +160,12 @@ void TaskManager::RenderPerformanceTab() {
 
     ImGui::Spacing();
 
-    // RAM Plot
+    // RAM Plot (auto-scaled so small fluctuations are visible)
     float latestRam = m_ramHistory.back();
-    char ramOverlay[64];
-    snprintf(ramOverlay, sizeof(ramOverlay), "Memory Usage: %.1f %% (4.8 / 16.0 GB)", latestRam);
-    ImGui::PlotLines("##RAMPlot", m_ramHistory.data(), (int)m_ramHistory.size(), 0, ramOverlay, 0.0f, 100.0f, ImVec2(-1, 100));
+    char ramOverlay[96];
+    snprintf(ramOverlay, sizeof(ramOverlay), "Memory Usage: %.1f %% (%.1f / %.1f GB)",
+             latestRam, m_usedMemMB / 1024.0f, Config::Get().totalRamGB);
+    ImGui::PlotLines("##RAMPlot", m_ramHistory.data(), (int)m_ramHistory.size(), 0, ramOverlay, FLT_MAX, FLT_MAX, ImVec2(-1, 100));
 }
 
 void TaskManager::RenderSystemSummaryTab() {
@@ -154,12 +173,13 @@ void TaskManager::RenderSystemSummaryTab() {
     ImGui::Separator();
     ImGui::Spacing();
 
-    ImGui::BulletText("OS Version: CSOPESY Emulator OS v2.0 (x86_64)");
+    ImGui::BulletText("OS Version: CSOPESY Emulator OS v1.0 (x86_64)");
     ImGui::BulletText("Processor: Virtual Multi-Core CPU @ 3.60GHz");
-    ImGui::BulletText("Total RAM: 16.0 GB DDR4");
+    ImGui::BulletText("Total RAM: %.1f GB DDR4", Config::Get().totalRamGB);
     ImGui::BulletText("Graphics: OpenGL 3.0 via GLFW & ImGui Compositor");
     ImGui::BulletText("Architecture: Immediate-Mode Compositor Architecture");
-    ImGui::BulletText("System Uptime: 0 days, 01:42:10");
+    int up = (int)ImGui::GetTime();
+    ImGui::BulletText("System Uptime: %d days, %02d:%02d:%02d", up / 86400, (up / 3600) % 24, (up / 60) % 60, up % 60);
 
     ImGui::Spacing();
     ImGui::Separator();
@@ -171,9 +191,14 @@ void TaskManager::RenderSystemSummaryTab() {
 void TaskManager::UpdateAndRender(bool* pOpen) {
     if (!pOpen || !*pOpen) return;
 
-    UpdateTelemetry(0.016f);
+    UpdateTelemetry(ImGui::GetIO().DeltaTime);
 
-    ImGui::SetNextWindowSize(ImVec2(640, 420), ImGuiCond_FirstUseEver);
+    // Default size/position: fit inside the window and sit toward the center.
+    ImGuiViewport* vp = ImGui::GetMainViewport();
+    ImVec2 size(std::min(780.0f, vp->Size.x - 360.0f), std::min(440.0f, vp->Size.y - 140.0f));
+    size.x = std::max(size.x, 420.0f);
+    ImGui::SetNextWindowSize(size, ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(vp->Pos.x + vp->Size.x - size.x - 30.0f, vp->Pos.y + 70.0f), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("Task Manager - CSOPESY OS", pOpen, ImGuiWindowFlags_NoCollapse)) {
         if (ImGui::BeginTabBar("TaskManagerTabBar")) {
             if (ImGui::BeginTabItem("Processes")) {

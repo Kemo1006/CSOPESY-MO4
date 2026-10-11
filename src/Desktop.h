@@ -17,7 +17,7 @@ public:
     Desktop();
     ~Desktop();
 
-    void UpdateAndRender(bool* pwrShutdownRequested);
+    void UpdateAndRender(bool* pwrShutdownRequested, bool* showWidget);
     void CycleWallpaper();
     std::string GetCurrentWallpaperName() const;
 
@@ -27,7 +27,7 @@ private:
 
     void RenderWallpaper(ImDrawList* drawList, float width, float height);
     void RenderTopSystemBar(float width, bool* pwrShutdownRequested);
-    void RenderDesktopIcons();
+    void RenderDesktopIcons(bool* showWidget);
 };
 
 #endif // DESKTOP_H

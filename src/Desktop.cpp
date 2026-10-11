@@ -1,10 +1,13 @@
 #include "Desktop.h"
+#include "Config.h"
 #include <ctime>
 #include <cstdio>
 #include <cmath>
 
 Desktop::Desktop() 
     : m_currentWallpaper(WALLPAPER_AURORA), m_animTime(0.0f) {
+    int w = Config::Get().wallpaper;
+    if (w >= 0 && w < WALLPAPER_COUNT) m_currentWallpaper = static_cast<WallpaperStyle>(w);
 }
 
 Desktop::~Desktop() {
@@ -25,7 +28,7 @@ std::string Desktop::GetCurrentWallpaperName() const {
 }
 
 void Desktop::RenderWallpaper(ImDrawList* drawList, float width, float height) {
-    m_animTime += 0.016f; // ~60fps step simulation
+    m_animTime += ImGui::GetIO().DeltaTime;
 
     if (m_currentWallpaper == WALLPAPER_AURORA) {
         // Deep Blue to Dark Violet Gradient
@@ -101,27 +104,26 @@ void Desktop::RenderTopSystemBar(float width, bool* pwrShutdownRequested) {
     if (ImGui::Begin("##TopSystemBar", NULL, flags)) {
         // OS Branding / Title
         ImGui::SetCursorPos(ImVec2(12.0f, 8.0f));
-        ImGui::TextColored(ImVec4(0.38f, 0.69f, 0.98f, 1.0f), "[CSOPESY OS v2.0]");
+        ImGui::TextColored(ImVec4(0.38f, 0.69f, 0.98f, 1.0f), "[CSOPESY OS v1.0]");
 
         ImGui::SameLine();
         ImGui::TextDisabled("|  Desktop Compositor Engine");
 
-        // Live Clock formatted HH:MM:SS AM/PM
+        // Live clock + date, updated every frame, right-aligned just left of the PWR button
         time_t rawTime = time(NULL);
         struct tm* timeInfo = localtime(&rawTime);
-        char clockStr[64];
-        char dateStr[64];
+        char clockStr[96];
         if (timeInfo) {
-            strftime(clockStr, sizeof(clockStr), "%I:%M:%S %p", timeInfo);
-            strftime(dateStr, sizeof(dateStr), "%b %d, %Y", timeInfo);
+            strftime(clockStr, sizeof(clockStr),
+                     Config::Get().clock24h ? "%A, %b %d, %Y | %H:%M:%S" : "%A, %b %d, %Y | %I:%M:%S %p",
+                     timeInfo);
         } else {
-            snprintf(clockStr, sizeof(clockStr), "00:00:00");
-            snprintf(dateStr, sizeof(dateStr), "Oct 07, 2026");
+            snprintf(clockStr, sizeof(clockStr), "--:--:--");
         }
 
-        float rightOffset = width - 260.0f;
-        ImGui::SetCursorPos(ImVec2(rightOffset, 7.0f));
-        ImGui::TextColored(ImVec4(0.9f, 0.95f, 1.0f, 1.0f), "%s  |  %s", dateStr, clockStr);
+        float clockWidth = ImGui::CalcTextSize(clockStr).x;
+        ImGui::SetCursorPos(ImVec2(width - 100.0f - clockWidth - 12.0f, 10.0f));
+        ImGui::TextColored(ImVec4(0.9f, 0.95f, 1.0f, 1.0f), "%s", clockStr);
 
         // PWR Shutdown Button
         ImGui::SetCursorPos(ImVec2(width - 90.0f, 4.0f));
@@ -158,15 +160,17 @@ void Desktop::RenderTopSystemBar(float width, bool* pwrShutdownRequested) {
     ImGui::PopStyleVar(2);
 }
 
-void Desktop::RenderDesktopIcons() {
+void Desktop::RenderDesktopIcons(bool* showWidget) {
+    if (!showWidget || !*showWidget) return;
+
     // Render decorative desktop widgets/shortcuts
     ImGui::SetNextWindowPos(ImVec2(20.0f, 60.0f), ImGuiCond_FirstUseEver);
     ImGui::SetNextWindowSize(ImVec2(240.0f, 180.0f), ImGuiCond_FirstUseEver);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoCollapse;
 
-    if (ImGui::Begin("System Info Widget", NULL, flags)) {
+    if (ImGui::Begin("System Info Widget", showWidget, flags)) {
         ImGui::TextColored(ImVec4(0.2f, 0.8f, 0.4f, 1.0f), "Status: Running");
-        ImGui::Text("Kernel: CSOPESY-v2.0-x64");
+        ImGui::Text("Kernel: CSOPESY-v1.0-x64");
         ImGui::Text("Compositor: GLFW + ImGui");
         ImGui::Separator();
         ImGui::Text("Current Theme:");
@@ -179,32 +183,17 @@ void Desktop::RenderDesktopIcons() {
     ImGui::End();
 }
 
-void Desktop::UpdateAndRender(bool* pwrShutdownRequested) {
+void Desktop::UpdateAndRender(bool* pwrShutdownRequested, bool* showWidget) {
     ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 workPos = viewport->Pos;
     ImVec2 workSize = viewport->Size;
 
-    // 1. Render Full-Screen Desktop Background Canvas
-    ImGui::SetNextWindowPos(workPos);
-    ImGui::SetNextWindowSize(workSize);
-    ImGuiWindowFlags bgFlags = ImGuiWindowFlags_NoDecoration | 
-                               ImGuiWindowFlags_NoMove | 
-                               ImGuiWindowFlags_NoResize | 
-                               ImGuiWindowFlags_NoInputs | 
-                               ImGuiWindowFlags_NoSavedSettings | 
-                               ImGuiWindowFlags_NoBringToFrontOnFocus |
-                               ImGuiWindowFlags_NoFocusOnAppearing;
-
-    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-    ImGui::Begin("##DesktopBackgroundCanvas", NULL, bgFlags);
-    ImDrawList* drawList = ImGui::GetWindowDrawList();
-    RenderWallpaper(drawList, workSize.x, workSize.y);
-    ImGui::End();
-    ImGui::PopStyleVar();
+    // 1. Render Full-Screen Desktop Background on ImGui's background draw list.
+    // (A window with NoBringToFrontOnFocus gets sorted in front of the bars, hiding them.)
+    RenderWallpaper(ImGui::GetBackgroundDrawList(), workSize.x, workSize.y);
 
     // 2. Render Top System Bar with Real-Time Clock & PWR Shutdown Button
     RenderTopSystemBar(workSize.x, pwrShutdownRequested);
 
     // 3. Render Desktop Widgets
-    RenderDesktopIcons();
+    RenderDesktopIcons(showWidget);
 }
