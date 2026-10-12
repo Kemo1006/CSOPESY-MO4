@@ -11,7 +11,10 @@ public:
     void UpdateAndRender(bool* showTaskManager, bool* showApp1, bool* showApp2, bool* showWidget);
 
 private:
-    void RenderTaskbarButton(const char* label, const char* icon, bool* windowState, ImVec4 activeColor);
+    enum IconKind { ICON_FOLDER, ICON_TERMINAL, ICON_TASKMGR, ICON_INFO };
+
+    void RenderIconButton(const char* id, const char* tooltip, IconKind icon, bool* windowState, ImVec4 accent);
+    void DrawIcon(ImDrawList* dl, IconKind icon, ImVec2 center, ImU32 color);
 };
 
 #endif // TASKBAR_H

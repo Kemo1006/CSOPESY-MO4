@@ -1,85 +1,94 @@
 ========================================================================
-                      CSOPESY SEMI-MAJOR OUTPUT 2 (MO4)
-                  DESKTOP-STYLE OPERATING SYSTEM MOCKUP
+  CSOPESY SEMI-MAJOR OUTPUT 2 (MO4) - DESKTOP-STYLE OS MOCK-UP
+  Group 19
 ========================================================================
 
-PROJECT INFORMATION:
-- Course: CSOPESY (Operating Systems)
-- Project: Semi-Major Output 2 (MO4) - Desktop-Style OS Mockup
-- Framework: C++11, Dear ImGui, GLFW 3.4, OpenGL 3.0
-- Entry File / Main Function: src/main.cpp (main function)
+GROUP MEMBERS
+  - Colcol, Llandro Massimo
+  - Ong, Kyle Edward
+  - Tayzon, Hannah Moriah
 
-DEVELOPER CREDENTIALS:
-- Prepared By: Gregory Cu
-- Created By: Neil Patrick Del Gallego, PhD
+ENTRY POINT
+  src/main.cpp   (contains main())
 
-------------------------------------------------------------------------
-CHECKLIST OF IMPLEMENTED REQUIREMENTS:
-------------------------------------------------------------------------
-[X] DESKTOP BACKGROUND:
-    - Base layer rendered first each frame across the full viewport.
-    - Customizable wallpapers: Deep Aurora gradient & animation, Cyberpunk 
-      Grid, Midnight Blue, and Sunset Horizon.
-    - Real-time digital clock (HH:MM:SS AM/PM) and date display updated 
-      every frame in the top system bar.
-    - Dedicated [PWR] Power button in the system bar for graceful 
-      application shutdown with modal confirmation (no force exit required).
-
-[X] TASKBAR DOCK:
-    - Anchored fixed panel at the bottom of the screen.
-    - Interactive icon launcher buttons for system applications:
-      1. [TASK] Task Manager: Opens/toggles Windows-style Task Manager.
-      2. [DIR]  File Explorer: Opens/toggles Unique App Screen 1.
-      3. [CMD]  Terminal: Opens/toggles Unique App Screen 2.
-      4. [SYS]  System Info: Toggles Desktop System Widget.
-
-[X] TASK MANAGER:
-    - Replicates Windows Task Manager UI design with tabbed navigation:
-      1. Processes Tab: Table listing active PIDs, Process Names, CPU (%), 
-         Memory Usage (MB), Status, and User. Supports selecting processes 
-         and simulated "End Task".
-      2. Performance Tab: Dynamic real-time telemetry line graphs for CPU 
-         and Memory utilization.
-      3. System Summary Tab: Hardware diagnostic details and system uptime.
-    - Uses live updated dummy telemetry values for a realistic feel.
-
-[X] UNIQUE APP SCREENS:
-    - App Screen 1 (File Explorer): Directory navigation tree, file grid, 
-      quick access sidebar, and storage drive space meter.
-    - App Screen 2 (CSOPESY Terminal): Interactive shell emulator supporting 
-      commands ('help', 'ver', 'ps', 'top', 'clock', 'clear', 'exit').
+STACK
+  C++17, Dear ImGui 1.93, GLFW 3.4, OpenGL 3.0 (GLFW + OpenGL + ImGui compositor)
 
 ------------------------------------------------------------------------
-BUILD & EXECUTION INSTRUCTIONS:
+REQUIREMENTS
 ------------------------------------------------------------------------
-Option A: Running Pre-built Executable
-  1. Open a Command Prompt or Terminal in this folder.
-  2. Run the generated binary:
-     CSOPESY_DesktopOS.exe
-
-Option B: Recompiling from Source (MinGW / GCC)
-  1. Ensure MinGW g++ is installed and accessible (e.g. TDM-GCC or MinGW64).
-  2. Double-click or execute 'build.bat' in the command line:
-     .\build.bat
-  3. The build script automatically compiles all C++ and C sources in 'src/', 
-     'vendor/imgui', and 'vendor/glfw' and links OpenGL libraries.
-  4. Upon build completion, launch:
-     CSOPESY_DesktopOS.exe
+  - Windows 10/11
+  - MSYS2 (UCRT64) with g++ and gdb, installed at C:\msys64
+        pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-gdb
+  - Visual Studio Code + Microsoft "C/C++" extension
 
 ------------------------------------------------------------------------
-PROJECT STRUCTURE:
+HOW TO RUN
 ------------------------------------------------------------------------
-  ├── src/
-  │   ├── main.cpp         <-- ENTRY POINT (main function)
-  │   ├── Desktop.h/.cpp   <-- Desktop canvas, wallpaper, live clock, PWR shutdown
-  │   ├── Taskbar.h/.cpp   <-- Fixed bottom dock & app launchers
-  │   ├── TaskManager.h/.cpp <-- Windows-style Task Manager & telemetry
-  │   ├── AppScreen1.h/.cpp <-- File Explorer application screen
-  │   └── AppScreen2.h/.cpp <-- Interactive Terminal application screen
-  ├── vendor/
-  │   ├── imgui/           <-- Dear ImGui source & backends
-  │   └── glfw/            <-- GLFW source & headers
-  ├── build.bat            <-- Compilation build script
-  ├── README.txt           <-- Documentation & instructions
-  └── PPT_Notes.md         <-- Presentation report guidelines & code snippets
+  1. Open the CSOPESY-MO4 folder in VS Code (the folder that contains .vscode).
+  2. Open src/main.cpp and press F5 ("Debug CSOPESY").
+     It compiles everything, then launches the emulator.
+  Build only:  Ctrl+Shift+B
+  Terminal alternative (project root):  .\build.ps1   or   build.bat
+
+  The program must be closed with the [PWR] button (top-right), then "Shutdown".
+
+------------------------------------------------------------------------
+WHAT HAPPENS WHEN IT STARTS
+------------------------------------------------------------------------
+  1. BIOS / POST screen      (Space, Enter or a click skips it)
+  2. CSOPESY loading screen  (Space, Enter or a click skips it)
+  3. Desktop
+
+------------------------------------------------------------------------
+REQUIREMENT CHECKLIST
+------------------------------------------------------------------------
+  DESKTOP
+    - Full-window gradient wallpaper (4 styles) drawn first each frame on
+      ImGui's background draw list.
+    - Real-time clock (updated every frame), top-right corner.
+    - [PWR] button -> confirm dialog -> graceful shutdown.
+  TASKBAR (fixed, bottom)
+    - 4 drawn icon buttons with hover tooltips; a pill under each icon
+      shows that the app is running:
+        Folder   = File Explorer (unique app screen 1)
+        Terminal = CSOPESY Terminal (unique app screen 2)
+        Graph    = Task Manager
+        "i"      = System Info widget (toggle)
+  TASK MANAGER
+    - Processes tab: PID / name / CPU % / memory / status / user, dummy
+      values that fluctuate, End Task. Performance tab: live CPU and
+      memory graphs. System Summary tab.
+
+------------------------------------------------------------------------
+RUNTIME PARAMETERS - config.txt (no recompiling needed)
+------------------------------------------------------------------------
+  Edit config.txt in the project root, save, and relaunch. Supported:
+    window_width / window_height / window_title
+    boot_enabled, bios_duration, loading_duration, allow_skip
+    wallpaper (aurora|cyberpunk|midnight|sunset), clock_24h
+    show_system_widget, open_task_manager
+    telemetry_interval, total_ram_gb, base_mem_used_mb
+    process = PID, Name, CPU, MemMB, Status, User   (one line per process)
+  Missing keys use defaults; bad values are clamped/ignored.
+  (Terminal commands: help, ver, ps, top, clock, echo, clear, exit)
+
+------------------------------------------------------------------------
+FOLDER STRUCTURE
+------------------------------------------------------------------------
+  src/                our source code
+    main.cpp          entry point, GLFW/ImGui setup, main loop
+    Config.h/.cpp     loads config.txt
+    Boot.h/.cpp       BIOS + loading screens
+    Desktop.h/.cpp    wallpaper, clock, PWR, System Info widget
+    Taskbar.h/.cpp    icon dock
+    TaskManager.h/.cpp
+    AppScreen1.h/.cpp File Explorer
+    AppScreen2.h/.cpp Terminal
+  lib/imgui/          Dear ImGui (third-party, unmodified)
+  lib/include, lib/lib-vc2022   GLFW headers and binaries
+  config.txt          runtime parameters
+  .vscode/            F5 / build configuration
+  build.ps1, build.bat   build scripts
+  PPT_Notes.md        notes for the technical report
 ========================================================================

@@ -35,6 +35,7 @@ void AppScreen1::UpdateAndRender(bool* pOpen) {
     if (!pOpen || !*pOpen) return;
 
     ImGui::SetNextWindowSize(ImVec2(600, 380), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(60.0f, 90.0f), ImGuiCond_FirstUseEver);
     if (ImGui::Begin("File Explorer - CSOPESY OS", pOpen, ImGuiWindowFlags_NoCollapse)) {
         // Navigation bar
         ImGui::Text("Location:");

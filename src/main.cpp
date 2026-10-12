@@ -8,6 +8,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
+#include "Config.h"
+#include "Boot.h"
 #include "Desktop.h"
 #include "Taskbar.h"
 #include "TaskManager.h"
@@ -20,6 +22,9 @@ static void glfw_error_callback(int error, const char* description) {
 
 int main(int argc, char** argv) {
     glfwSetErrorCallback(glfw_error_callback);
+    Config& cfg = Config::Get();
+    cfg.Load();
+
     if (!glfwInit()) {
         fprintf(stderr, "Failed to initialize GLFW!\n");
         return 1;
@@ -30,7 +35,7 @@ int main(int argc, char** argv) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "CSOPESY OS Compositor - Desktop Shell Mockup", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(cfg.windowWidth, cfg.windowHeight, cfg.windowTitle.c_str(), NULL, NULL);
     if (window == NULL) {
         fprintf(stderr, "Failed to create GLFW window!\n");
         glfwTerminate();
@@ -78,6 +83,7 @@ int main(int argc, char** argv) {
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // Instantiate OS Subsystems
+    BootSequence boot;
     Desktop desktop;
     Taskbar taskbar;
     TaskManager taskManager;
@@ -85,10 +91,10 @@ int main(int argc, char** argv) {
     AppScreen2 appScreen2; // System Terminal
 
     // UI Window State Controls
-    bool showTaskManager = true;
+    bool showTaskManager = cfg.openTaskManagerOnStart;
     bool showApp1 = false;
     bool showApp2 = false;
-    bool showWidget = true;
+    bool showWidget = cfg.showSystemWidget;
     bool pwrShutdownRequested = false;
 
     // Main Compositor Loop
@@ -100,20 +106,20 @@ int main(int argc, char** argv) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // Render Desktop Background Canvas & Top Bar with Clock & PWR shutdown button
-        desktop.UpdateAndRender(&pwrShutdownRequested);
+        if (!boot.UpdateAndRender()) {
+            // Boot screens (BIOS -> loading) are still running; the desktop starts afterwards.
+        } else {
+            // Desktop: wallpaper, top bar with real-time clock and PWR button, System Info widget
+            desktop.UpdateAndRender(&pwrShutdownRequested, &showWidget);
 
-        // Render Taskbar Dock
-        taskbar.UpdateAndRender(&showTaskManager, &showApp1, &showApp2, &showWidget);
+            // Taskbar dock (icon buttons)
+            taskbar.UpdateAndRender(&showTaskManager, &showApp1, &showApp2, &showWidget);
 
-        // Render Task Manager
-        taskManager.UpdateAndRender(&showTaskManager);
-
-        // Render Unique App Screen 1 (File Explorer)
-        appScreen1.UpdateAndRender(&showApp1);
-
-        // Render Unique App Screen 2 (System Terminal)
-        appScreen2.UpdateAndRender(&showApp2);
+            // Task Manager and the two unique app screens
+            taskManager.UpdateAndRender(&showTaskManager);
+            appScreen1.UpdateAndRender(&showApp1);   // File Explorer
+            appScreen2.UpdateAndRender(&showApp2);   // Terminal
+        }
 
         // Graceful PWR Shutdown Check
         if (pwrShutdownRequested) {
