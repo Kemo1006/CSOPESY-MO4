@@ -141,11 +141,11 @@ void BootSequence::RenderLoading(float duration) {
     const ImVec4 white(0.85f, 0.85f, 0.85f, 1.0f);
     ImGui::Spacing(); ImGui::Spacing();
     centered("CSOPESY Operating System Emulator v1.0", white);
-    centered("Created By: Dr. Neil Patrick Del Gallego", white);
+    centered("Created By: Group 19", white);
     ImGui::Spacing();
-    centered("Part of Project Anito:", white);
-    centered("Support for the PH Gaming Industry Towards Embracing", white);
-    centered("In-House Game Engine Development", white);
+    centered("MO4 Submission:", white);
+    centered("Colcol, Tayzon, Ong", white);
+    centered("AY 26-27 | Term 1", white);
     ImGui::Spacing(); ImGui::Spacing(); ImGui::Spacing();
 
     int dots = 1 + ((int)(m_phaseTime * 2.5f) % 3);
