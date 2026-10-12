@@ -1,14 +1,29 @@
-# CSOPESY Semi-Major Output 2 (MO4) — Desktop-Style OS Mock-up
+# CSOPESY (MO4) — Desktop-Style OS Mock-up
 
-> **Group 19** — CSOPESY, De La Salle University
-
-## Group Members
+##  Group 19 Members
 
 | Name | Role |
 |---|---|
 | Colcol, Llandro Massimo | Developer |
 | Ong, Kyle Edward | Developer |
 | Tayzon, Hannah Moriah | Developer |
+
+## Submission Details
+
+| Item | Detail |
+|---|---|
+| **Source code link** | https://github.com/Kemo1006/CSOPESY-MO4 |
+| **Entry class file** | [`src/main.cpp`](src/main.cpp) — contains `main()` |
+| **Group** | Group 19 (members listed above) |
+| **README for graders** | `README.txt` (same instructions as this file) |
+
+### Quick Run Instructions
+1. Install **MSYS2 (UCRT64)** with `g++` and `gdb` at `C:\msys64`, plus **VS Code** with the Microsoft **C/C++** extension (see [Requirements](#requirements)).
+2. Open the **CSOPESY-MO4** folder in VS Code (the folder that contains `.vscode/`).
+3. Open `src/main.cpp` and press **F5** (`Debug CSOPESY`). It builds and launches the emulator.
+4. Close the program with the **[PWR]** button (top-right) → **Shutdown**.
+
+To change parameters (boot times, wallpaper, dummy processes, etc.), edit `config.txt` and relaunch. No recompiling is needed. See [Runtime Configuration](#runtime-configuration--configtxt).
 
 ## Entry Point
 
@@ -76,155 +91,8 @@ BIOS / POST Screen  →  CSOPESY Loading Screen  →  Desktop
 
 ---
 
-## Feature Checklist
-
-### Desktop
-- Full-window **gradient wallpaper** (4 styles: `aurora`, `cyberpunk`, `midnight`, `sunset`) drawn on ImGui's background draw list.
-- **Real-time clock** (12h or 24h) in the top-right corner, updated every frame.
-- **[PWR] button** → confirmation dialog → graceful shutdown via `glfwSetWindowShouldClose`.
-- **System Info widget** — togglable overlay showing system details.
-
-### Taskbar (fixed, bottom)
-Four drawn icon buttons with hover tooltips. A colored pill indicator beneath each icon shows whether the corresponding app is open:
-
-| Icon | App | Description |
-|---|---|---|
-| 📁 Folder | **File Explorer** | Unique app screen 1 — browse a mock filesystem |
-| 💻 Terminal | **CSOPESY Terminal** | Unique app screen 2 — interactive command prompt |
-| 📊 Graph | **Task Manager** | Process table, performance graphs, system summary |
-| ℹ️ Info | **System Info** | Toggle the system info widget overlay |
-
-### Task Manager
-- **Processes tab:** PID, process name, CPU %, memory (MB), status, and user. Dummy values fluctuate on a configurable timer to simulate a live system. Includes **End Task** button.
-- **Performance tab:** Live CPU and memory usage graphs.
-- **System Summary tab:** Overview of system resources.
-
-### Terminal Commands
-The CSOPESY Terminal (`AppScreen2`) supports the following commands:
-
-| Command | Description |
-|---|---|
-| `help` | Display available commands |
-| `ver` | Display OS kernel version |
-| `ps` | List running processes |
-| `top` | Display CPU and memory statistics |
-| `clock` | Output current system time |
-| `echo <text>` | Print text to the terminal |
-| `clear` | Clear terminal buffer |
-| `exit` | Close the terminal window |
-
----
-
 ## Runtime Configuration — `config.txt`
 
 Edit `config.txt` in the project root, save, and relaunch. **No recompilation needed.** Missing keys use built-in defaults; invalid values are clamped or ignored.
 
-### Window
-| Key | Default | Description |
-|---|---|---|
-| `window_width` | `1280` | Window width in pixels |
-| `window_height` | `720` | Window height in pixels |
-| `window_title` | `CSOPESY Desktop OS Emulator` | Window title text |
-
-### Boot Sequence
-| Key | Default | Description |
-|---|---|---|
-| `boot_enabled` | `true` | `false` = skip straight to desktop |
-| `bios_duration` | `6` | Seconds the BIOS/POST screen runs |
-| `loading_duration` | `5` | Seconds the loading screen runs |
-| `allow_skip` | `true` | Allow Space/Enter/click to skip boot screens |
-
-### Desktop
-| Key | Default | Description |
-|---|---|---|
-| `wallpaper` | `aurora` | `aurora` \| `cyberpunk` \| `midnight` \| `sunset` (or `0`–`3`) |
-| `clock_24h` | `false` | `true` = 24-hour clock format |
-| `show_system_widget` | `true` | Show the System Info widget at startup |
-
-### Task Manager
-| Key | Default | Description |
-|---|---|---|
-| `open_task_manager` | `true` | Open Task Manager window at startup |
-| `telemetry_interval` | `0.5` | Seconds between CPU/memory telemetry updates |
-| `total_ram_gb` | `16` | Total RAM shown in the Performance tab |
-| `base_mem_used_mb` | `4500` | Base system memory usage (on top of process memory) |
-
-### Dummy Processes
-Add one line per process:
-```
-process = PID, Name, CPU%, MemoryMB, Status, User
-```
-Example:
-```
-process = 1004, csopesy_compositor.exe, 4.2, 128.5, Running, SYSTEM
-process = 3412, csopesy_terminal.exe, 0.5, 32.1, Running, Student
-```
-Remove all `process` lines to use the built-in default process list.
-
 ---
-
-## System Architecture
-
-```
-+-------------------------------------------------------------+
-|  Host OS (Windows)                                          |
-|   GLFW -- window, input events, OpenGL 3.0 context          |
-+--------------------------+----------------------------------+
-                           | events / framebuffer
-+--------------------------v----------------------------------+
-|  Dear ImGui (immediate-mode UI) + OpenGL3 render backend    |
-+--------------------------+----------------------------------+
-                           | NewFrame -> widgets -> Render
-+--------------------------v----------------------------------+
-|  CSOPESY COMPOSITOR  (src/main.cpp, one loop, every frame)  |
-|                                                             |
-|   Config -----> loaded once from config.txt                 |
-|                                                             |
-|   BootSequence : BIOS -> Loading -> (done)                  |
-|        | finished                                           |
-|        v                                                    |
-|   Layer 0  Desktop    wallpaper, clock, [PWR]    --+        |
-|   Layer 1  Taskbar    icon dock (bottom)           | shared |
-|   Layer 2  Windows    TaskManager                  | bool*  |
-|                       AppScreen1 (File Explorer)   | flags  |
-|                       AppScreen2 (Terminal)      --+        |
-|                                                             |
-|   [PWR] -> pwrShutdownRequested -> glfwSetWindowShouldClose |
-+-------------------------------------------------------------+
-```
-
-**Per-frame flow:**
-```
-glfwPollEvents -> ImGui NewFrame -> [Boot screens OR Desktop -> Taskbar -> Windows]
-               -> shutdown check -> ImGui::Render -> OpenGL draw -> SwapBuffers
-```
-
-Components communicate through simple `bool*` flags held in `main.cpp` — no event bus or callback system. Clicking a taskbar icon toggles a flag; the corresponding window reads the same flag to show or hide itself.
-
----
-
-## Folder Structure
-
-```
-CSOPESY-MO4/
-├── src/                        # Our source code
-│   ├── main.cpp                # Entry point, GLFW/ImGui setup, main loop
-│   ├── Config.h / .cpp         # Parses config.txt into a Config struct
-│   ├── Boot.h / .cpp           # BIOS/POST screen + loading screen state machine
-│   ├── Desktop.h / .cpp        # Wallpaper, real-time clock, [PWR], System Info widget
-│   ├── Taskbar.h / .cpp        # Icon dock with running-app indicators
-│   ├── TaskManager.h / .cpp    # Process table, performance graphs, system summary
-│   ├── AppScreen1.h / .cpp     # File Explorer (unique app screen 1)
-│   └── AppScreen2.h / .cpp     # Terminal (unique app screen 2)
-├── lib/
-│   ├── imgui/                  # Dear ImGui (third-party, unmodified)
-│   ├── include/                # GLFW headers
-│   └── lib-vc2022/             # GLFW binaries (glfw3.dll)
-├── .vscode/                    # VS Code build/run/debug configuration
-├── build.ps1                   # PowerShell build script
-├── build.bat                   # Batch wrapper for build.ps1
-├── config.txt                  # Runtime parameters (no recompile needed)
-├── PPT_Notes.md                # Technical report / presentation notes
-├── MO4 - Desktop_GUI.docx      # Assignment specification
-└── README.md                   # This file
-```

@@ -8,7 +8,7 @@
 
 static const float BIOS_HOLD = 0.8f;  // pause after the last BIOS line before loading starts
 
-// "CSOPESY" in 5-row block letters, built by joining one glyph per letter.
+// "CSOPESY" in 5-row block letters
 static const char* const GLYPH_C[5] = { R"(  ____ )", R"( / ___|)", R"(| |    )", R"(| |___ )", R"( \____|)" };
 static const char* const GLYPH_S[5] = { R"( ____  )", R"(/ ___| )", R"(\___ \ )", R"( ___) |)", R"(|____/ )" };
 static const char* const GLYPH_O[5] = { R"(  ___  )", R"( / _ \ )", R"(| | | |)", R"(| |_| |)", R"( \___/ )" };
@@ -115,7 +115,6 @@ void BootSequence::RenderBios(float duration) {
         }
     }
 
-    // Blinking cursor under the text, like a real POST screen.
     if (std::fmod(m_phaseTime, 1.0f) < 0.5f) ImGui::TextColored(white, "_");
 }
 

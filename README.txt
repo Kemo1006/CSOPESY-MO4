@@ -8,6 +8,25 @@ GROUP MEMBERS
   - Ong, Kyle Edward
   - Tayzon, Hannah Moriah
 
+------------------------------------------------------------------------
+SUBMISSION DETAILS
+------------------------------------------------------------------------
+  Source code link :  https://github.com/Kemo1006/CSOPESY-MO4
+  Entry class file :  src/main.cpp   (contains main())
+  Group            :  Group 19 (members listed above)
+
+  QUICK RUN INSTRUCTIONS
+    1. Install MSYS2 (UCRT64) with g++ and gdb at C:\msys64, plus VS Code
+       with the Microsoft "C/C++" extension (see REQUIREMENTS below).
+    2. Open the CSOPESY-MO4 folder in VS Code (the folder that contains .vscode).
+    3. Open src/main.cpp and press F5 ("Debug CSOPESY").
+       It builds and launches the emulator.
+    4. Close the program with the [PWR] button (top-right) -> "Shutdown".
+
+  To change parameters (boot times, wallpaper, dummy processes, etc.),
+  edit config.txt and relaunch. No recompiling is needed.
+  See RUNTIME PARAMETERS below.
+
 ENTRY POINT
   src/main.cpp   (contains main())
 
@@ -32,63 +51,3 @@ HOW TO RUN
   Terminal alternative (project root):  .\build.ps1   or   build.bat
 
   The program must be closed with the [PWR] button (top-right), then "Shutdown".
-
-------------------------------------------------------------------------
-WHAT HAPPENS WHEN IT STARTS
-------------------------------------------------------------------------
-  1. BIOS / POST screen      (Space, Enter or a click skips it)
-  2. CSOPESY loading screen  (Space, Enter or a click skips it)
-  3. Desktop
-
-------------------------------------------------------------------------
-REQUIREMENT CHECKLIST
-------------------------------------------------------------------------
-  DESKTOP
-    - Full-window gradient wallpaper (4 styles) drawn first each frame on
-      ImGui's background draw list.
-    - Real-time clock (updated every frame), top-right corner.
-    - [PWR] button -> confirm dialog -> graceful shutdown.
-  TASKBAR (fixed, bottom)
-    - 4 drawn icon buttons with hover tooltips; a pill under each icon
-      shows that the app is running:
-        Folder   = File Explorer (unique app screen 1)
-        Terminal = CSOPESY Terminal (unique app screen 2)
-        Graph    = Task Manager
-        "i"      = System Info widget (toggle)
-  TASK MANAGER
-    - Processes tab: PID / name / CPU % / memory / status / user, dummy
-      values that fluctuate, End Task. Performance tab: live CPU and
-      memory graphs. System Summary tab.
-
-------------------------------------------------------------------------
-RUNTIME PARAMETERS - config.txt (no recompiling needed)
-------------------------------------------------------------------------
-  Edit config.txt in the project root, save, and relaunch. Supported:
-    window_width / window_height / window_title
-    boot_enabled, bios_duration, loading_duration, allow_skip
-    wallpaper (aurora|cyberpunk|midnight|sunset), clock_24h
-    show_system_widget, open_task_manager
-    telemetry_interval, total_ram_gb, base_mem_used_mb
-    process = PID, Name, CPU, MemMB, Status, User   (one line per process)
-  Missing keys use defaults; bad values are clamped/ignored.
-  (Terminal commands: help, ver, ps, top, clock, echo, clear, exit)
-
-------------------------------------------------------------------------
-FOLDER STRUCTURE
-------------------------------------------------------------------------
-  src/                our source code
-    main.cpp          entry point, GLFW/ImGui setup, main loop
-    Config.h/.cpp     loads config.txt
-    Boot.h/.cpp       BIOS + loading screens
-    Desktop.h/.cpp    wallpaper, clock, PWR, System Info widget
-    Taskbar.h/.cpp    icon dock
-    TaskManager.h/.cpp
-    AppScreen1.h/.cpp File Explorer
-    AppScreen2.h/.cpp Terminal
-  lib/imgui/          Dear ImGui (third-party, unmodified)
-  lib/include, lib/lib-vc2022   GLFW headers and binaries
-  config.txt          runtime parameters
-  .vscode/            F5 / build configuration
-  build.ps1, build.bat   build scripts
-  PPT_Notes.md        notes for the technical report
-========================================================================

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-// A dummy process row loaded from config.txt ("process=PID,Name,CPU,MemMB,Status,User").
+// A dummy process row loaded from config.txt
 struct ProcessSeed {
     int pid;
     std::string name;

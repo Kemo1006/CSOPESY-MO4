@@ -102,14 +102,14 @@ void Desktop::RenderTopSystemBar(float width, bool* pwrShutdownRequested) {
     ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.05f, 0.07f, 0.12f, 0.85f));
 
     if (ImGui::Begin("##TopSystemBar", NULL, flags)) {
-        // OS Branding / Title
+        // OS Title
         ImGui::SetCursorPos(ImVec2(12.0f, 8.0f));
         ImGui::TextColored(ImVec4(0.38f, 0.69f, 0.98f, 1.0f), "[CSOPESY OS v1.0]");
 
         ImGui::SameLine();
         ImGui::TextDisabled("|  Desktop Compositor Engine");
 
-        // Live clock + date, updated every frame, right-aligned just left of the PWR button
+        // Live clock + date
         time_t rawTime = time(NULL);
         struct tm* timeInfo = localtime(&rawTime);
         char clockStr[96];

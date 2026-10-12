@@ -22,7 +22,7 @@ void TaskManager::InitializeProcesses() {
     m_processes.clear();
     m_selectedProcessIndex = -1;
 
-    // Processes come from config.txt; fall back to a built-in list if none are given.
+    // Processes come from config.txt
     const Config& cfg = Config::Get();
     for (size_t i = 0; i < cfg.processes.size(); ++i) {
         const ProcessSeed& p = cfg.processes[i];
@@ -43,7 +43,6 @@ void TaskManager::UpdateTelemetry(float deltaTime) {
     m_updateTimer += deltaTime;
     const Config& cfg = Config::Get();
 
-    // Periodically fluctuate dummy CPU and Memory values for real-time feel
     if (m_updateTimer >= cfg.telemetryInterval) {
         m_updateTimer = 0.0f;
         float totalCpu = 0.0f;
@@ -160,7 +159,7 @@ void TaskManager::RenderPerformanceTab() {
 
     ImGui::Spacing();
 
-    // RAM Plot (auto-scaled so small fluctuations are visible)
+    // RAM Plot 
     float latestRam = m_ramHistory.back();
     char ramOverlay[96];
     snprintf(ramOverlay, sizeof(ramOverlay), "Memory Usage: %.1f %% (%.1f / %.1f GB)",
@@ -193,7 +192,7 @@ void TaskManager::UpdateAndRender(bool* pOpen) {
 
     UpdateTelemetry(ImGui::GetIO().DeltaTime);
 
-    // Default size/position: fit inside the window and sit toward the center.
+    // Default size/position: 
     ImGuiViewport* vp = ImGui::GetMainViewport();
     ImVec2 size(std::min(780.0f, vp->Size.x - 360.0f), std::min(440.0f, vp->Size.y - 140.0f));
     size.x = std::max(size.x, 420.0f);

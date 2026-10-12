@@ -7,7 +7,7 @@ Taskbar::Taskbar() {
 Taskbar::~Taskbar() {
 }
 
-// Icons are drawn with ImGui draw commands (no image assets needed). `center` is the icon's middle.
+// Icons are drawn with ImGui draw commands
 void Taskbar::DrawIcon(ImDrawList* dl, IconKind icon, ImVec2 c, ImU32 col) {
     switch (icon) {
         case ICON_FOLDER:

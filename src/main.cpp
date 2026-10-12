@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
-    // Setup Dear ImGui context
+    // Setup ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
     style.Colors[ImGuiCol_TabHovered]       = ImVec4(0.24f, 0.45f, 0.75f, 1.00f);
     style.Colors[ImGuiCol_TabActive]        = ImVec4(0.18f, 0.36f, 0.62f, 1.00f);
 
-    // Setup Platform/Renderer backends
+    // Setup Platform
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
@@ -107,12 +107,12 @@ int main(int argc, char** argv) {
         ImGui::NewFrame();
 
         if (!boot.UpdateAndRender()) {
-            // Boot screens (BIOS -> loading) are still running; the desktop starts afterwards.
+            // Boot screens are still running; the desktop starts afterwards.
         } else {
             // Desktop: wallpaper, top bar with real-time clock and PWR button, System Info widget
             desktop.UpdateAndRender(&pwrShutdownRequested, &showWidget);
 
-            // Taskbar dock (icon buttons)
+            // Taskbar buttons
             taskbar.UpdateAndRender(&showTaskManager, &showApp1, &showApp2, &showWidget);
 
             // Task Manager and the two unique app screens
@@ -121,7 +121,7 @@ int main(int argc, char** argv) {
             appScreen2.UpdateAndRender(&showApp2);   // Terminal
         }
 
-        // Graceful PWR Shutdown Check
+        // PWR Shutdown Check
         if (pwrShutdownRequested) {
             glfwSetWindowShouldClose(window, GLFW_TRUE);
         }

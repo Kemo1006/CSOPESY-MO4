@@ -59,12 +59,15 @@ void AppScreen1::UpdateAndRender(bool* pOpen) {
         ImGui::BeginChild("QuickAccessSidebar", ImVec2(150, 0), true);
         ImGui::TextColored(ImVec4(0.38f, 0.69f, 0.98f, 1.0f), "Quick Access");
         ImGui::Separator();
+
         if (ImGui::Selectable("Root Volume", m_currentPath == "/root/system_volume")) {
             LoadPath("/root/system_volume");
         }
+
         if (ImGui::Selectable("Documents", m_currentPath == "/root/system_volume/Documents")) {
             LoadPath("/root/system_volume/Documents");
         }
+        
         ImGui::Spacing();
         ImGui::Separator();
         ImGui::TextDisabled("Storage Drive:");
